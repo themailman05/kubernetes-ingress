@@ -112,6 +112,11 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.txt
+      - name: Install teststat
+        run: go install github.com/vearutop/teststat@latest
+      - name: Create summary
+        run: |
+          teststat -markdown $(find /tmp -type f -name 'unit.*.json' -print0 | xargs -0) >> $GITHUB_STEP_SUMMARY
 
   helm-tests:
     name: Helm Tests

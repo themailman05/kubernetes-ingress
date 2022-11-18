@@ -4,7 +4,8 @@ set -e
 echo "" >coverage.txt
 
 for d in $(go list ./... | grep -v vendor); do
-    go test -tags=aws -shuffle=on -race -coverprofile=profile.out -covermode=atomic $d
+    tfile=$(mktemp /tmp/unit.XXXXX.json)
+    go test -json -tags=aws -shuffle=on -race -coverprofile=profile.out -covermode=atomic $d >$tfile
     if [ -f profile.out ]; then
         cat profile.out >>coverage.txt
         rm profile.out
