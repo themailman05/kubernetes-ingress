@@ -26,4 +26,4 @@ NGINX (and F5) has its own style guide, but broadly speaking, you can stick to t
 
 We prefer the active voice, and plain language. When possible, be concise and avoid jargon - don't assume the reader knows as much as you.
 
-If an acronym or abbreviation could cause confusion to someone, explicitly define it during its first use, e.g *Security Operations Centor (SOC)*.
+If an acronym or abbreviation could cause confusion to someone, explicitly define it during its first use, e.g *Security Operations Center (SOC)*.
