@@ -10,4 +10,3 @@ spec:
 
     jwksURI: http://keycloak.default.svc.cluster.local:8080/realms/example/protocol/openid-connect/certs
 #    keyCache: 10m
-
