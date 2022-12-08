@@ -820,29 +820,53 @@ func (p *policiesCfg) addJWTAuthConfig(
 		res.addWarningf("Multiple jwt policies in the same context is not valid. JWT policy %s will be ignored", polKey)
 		return res
 	}
-
-	jwtSecretKey := fmt.Sprintf("%v/%v", polNamespace, jwtAuth.Secret)
-	secretRef := secretRefs[jwtSecretKey]
-	var secretType api_v1.SecretType
-	if secretRef.Secret != nil {
-		secretType = secretRef.Secret.Type
-	}
-	if secretType != "" && secretType != secrets.SecretTypeJWK {
-		res.addWarningf("JWT policy %s references a secret %s of a wrong type '%s', must be '%s'", polKey, jwtSecretKey, secretType, secrets.SecretTypeJWK)
-		res.isError = true
-		return res
-	} else if secretRef.Error != nil {
-		res.addWarningf("JWT policy %s references an invalid secret %s: %v", polKey, jwtSecretKey, secretRef.Error)
+	if jwtAuth.Secret != "" && jwtAuth.JwksURI != "" {
+		res.addWarningf("Secret and JwksURI cannot be used at the same time. JWT policy %s will be ignored", polKey)
 		res.isError = true
 		return res
 	}
+	if jwtAuth.Secret != "" { // Use secret key
+		if jwtAuth.KeyCache != "" {
+			res.addWarningf("KeyCache cannot be used with Secret. JWT policy %s will be ignored", polKey)
+			res.isError = true
+			return res
+		}
+		jwtSecretKey := fmt.Sprintf("%v/%v", polNamespace, jwtAuth.Secret)
+		secretRef := secretRefs[jwtSecretKey]
+		var secretType api_v1.SecretType
+		if secretRef.Secret != nil {
+			secretType = secretRef.Secret.Type
+		}
+		if secretType != "" && secretType != secrets.SecretTypeJWK {
+			res.addWarningf("JWT policy %s references a secret %s of a wrong type '%s', must be '%s'", polKey, jwtSecretKey, secretType, secrets.SecretTypeJWK)
+			res.isError = true
+			return res
+		} else if secretRef.Error != nil {
+			res.addWarningf("JWT policy %s references an invalid secret %s: %v", polKey, jwtSecretKey, secretRef.Error)
+			res.isError = true
+			return res
+		}
 
-	p.JWTAuth = &version2.JWTAuth{
-		Secret: secretRef.Path,
-		Realm:  jwtAuth.Realm,
-		Token:  jwtAuth.Token,
+		p.JWTAuth = &version2.JWTAuth{
+			Secret: secretRef.Path,
+			Realm:  jwtAuth.Realm,
+			Token:  jwtAuth.Token,
+		}
+		return res
+	} else if jwtAuth.JwksURI != "" { // Use JWKS URI
+		p.JWTAuth = &version2.JWTAuth{
+			JwksURI:  jwtAuth.JwksURI,
+			Realm:    jwtAuth.Realm,
+			Token:    jwtAuth.Token,
+			KeyCache: jwtAuth.KeyCache,
+		}
+		return res
+	} else {
+		res.addWarningf("Either Secret or JwksURI must be present. JWT policy %s will be ignored", polKey)
+		res.isError = true
+		return res
 	}
-	return res
+
 }
 
 func (p *policiesCfg) addIngressMTLSConfig(

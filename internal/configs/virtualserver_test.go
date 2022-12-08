@@ -2956,6 +2956,37 @@ func TestGeneratePolicies(t *testing.T) {
 		{
 			policyRefs: []conf_v1.PolicyReference{
 				{
+					Name:      "jwt-policy-2",
+					Namespace: "default",
+				},
+			},
+			policies: map[string]*conf_v1.Policy{
+				"default/jwt-policy-2": {
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "jwt-policy",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						JWTAuth: &conf_v1.JWTAuth{
+							Realm:    "My Test API",
+							JwksURI:  "http://idp.example.com/keys",
+							KeyCache: "1h",
+						},
+					},
+				},
+			},
+			expected: policiesCfg{
+				JWTAuth: &version2.JWTAuth{
+					Realm:    "My Test API",
+					JwksURI:  "http://idp.example.com/keys",
+					KeyCache: "1h",
+				},
+			},
+			msg: "jwks reference",
+		},
+		{
+			policyRefs: []conf_v1.PolicyReference{
+				{
 					Name:      "basic-auth-policy",
 					Namespace: "default",
 				},
@@ -3372,6 +3403,137 @@ func TestGeneratePoliciesFails(t *testing.T) {
 			},
 			expectedOidc: &oidcPolicyCfg{},
 			msg:          "jwt references wrong secret type",
+		},
+		{
+			policyRefs: []conf_v1.PolicyReference{
+				{
+					Name:      "jwt-policy",
+					Namespace: "default",
+				},
+			},
+			policies: map[string]*conf_v1.Policy{
+				"default/jwt-policy": {
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "jwt-policy",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						JWTAuth: &conf_v1.JWTAuth{
+							Realm:   "test",
+							Secret:  "jwt-secret",
+							JwksURI: "http://idp.example.com/keys",
+						},
+					},
+				},
+			},
+			policyOpts: policyOptions{
+				secretRefs: map[string]*secrets.SecretReference{
+					"default/jwt-secret": {
+						Secret: &api_v1.Secret{
+							Type: secrets.SecretTypeJWK,
+						},
+					},
+				},
+			},
+			expected: policiesCfg{
+				ErrorReturn: &version2.Return{
+					Code: 500,
+				},
+			},
+			expectedWarnings: Warnings{
+				nil: {
+					`Secret and JwksURI cannot be used at the same time. JWT policy default/jwt-policy will be ignored`,
+				},
+			},
+			expectedOidc: &oidcPolicyCfg{},
+			msg:          "Both Secret and JwksURI used",
+		},
+		{
+			policyRefs: []conf_v1.PolicyReference{
+				{
+					Name:      "jwt-policy",
+					Namespace: "default",
+				},
+			},
+			policies: map[string]*conf_v1.Policy{
+				"default/jwt-policy": {
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "jwt-policy",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						JWTAuth: &conf_v1.JWTAuth{
+							Realm: "test",
+						},
+					},
+				},
+			},
+			policyOpts: policyOptions{
+				secretRefs: map[string]*secrets.SecretReference{
+					"default/jwt-secret": {
+						Secret: &api_v1.Secret{
+							Type: secrets.SecretTypeJWK,
+						},
+					},
+				},
+			},
+			expected: policiesCfg{
+				ErrorReturn: &version2.Return{
+					Code: 500,
+				},
+			},
+			expectedWarnings: Warnings{
+				nil: {
+					`Either Secret or JwksURI must be present. JWT policy default/jwt-policy will be ignored`,
+				},
+			},
+			expectedOidc: &oidcPolicyCfg{},
+			msg:          "Both Secret and JwksURI missing",
+		},
+		{
+			policyRefs: []conf_v1.PolicyReference{
+				{
+					Name:      "jwt-policy",
+					Namespace: "default",
+				},
+			},
+			policies: map[string]*conf_v1.Policy{
+				"default/jwt-policy": {
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "jwt-policy",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						JWTAuth: &conf_v1.JWTAuth{
+							Realm:    "test",
+							Secret:   "jwt-secret",
+							KeyCache: "1h",
+						},
+					},
+				},
+			},
+			policyOpts: policyOptions{
+				secretRefs: map[string]*secrets.SecretReference{
+					"default/jwt-secret": {
+						Secret: &api_v1.Secret{
+							Type: secrets.SecretTypeJWK,
+						},
+						Path: "/etc/nginx/secrets/default-jwt-secret",
+					},
+				},
+			},
+			expected: policiesCfg{
+				ErrorReturn: &version2.Return{
+					Code: 500,
+				},
+			},
+			expectedWarnings: Warnings{
+				nil: {
+					`KeyCache cannot be used with Secret. JWT policy default/jwt-policy will be ignored`,
+				},
+			},
+			expectedOidc: &oidcPolicyCfg{},
+			msg:          "KeyCache used with Secret",
 		},
 		{
 			policyRefs: []conf_v1.PolicyReference{

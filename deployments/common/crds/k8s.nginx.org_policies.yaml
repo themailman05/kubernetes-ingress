@@ -106,6 +106,10 @@ spec:
                       type: string
                     token:
                       type: string
+                    jwksURI:
+                      type: string
+                    keyCache:
+                      type: string
                 oidc:
                   description: OIDC defines an Open ID Connect policy.
                   type: object
@@ -263,6 +267,10 @@ spec:
                     secret:
                       type: string
                     token:
+                      type: string
+                    jwksURI:
+                      type: string
+                    keyCache:
                       type: string
                 rateLimit:
                   description: RateLimit defines a rate limit policy.

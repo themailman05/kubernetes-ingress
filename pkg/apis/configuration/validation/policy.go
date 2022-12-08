@@ -159,9 +159,18 @@ func validateJWT(jwt *v1.JWTAuth, fieldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, validateRealm(jwt.Realm, fieldPath.Child("realm"))...)
 	}
 
-	if jwt.Secret == "" {
-		return append(allErrs, field.Required(fieldPath.Child("secret"), ""))
+	if jwt.Secret == "" && jwt.JwksURI == "" {
+		return append(allErrs, field.Required(fieldPath.Child("secret"), "either Secret or JwksURI must be present"))
 	}
+
+	if jwt.Secret != "" && jwt.JwksURI != "" {
+		return append(allErrs, field.Forbidden(fieldPath.Child("secret"), "only either of Secret or JwksURI can be used"))
+	}
+
+	if jwt.KeyCache != "" && jwt.JwksURI == "" {
+		return append(allErrs, field.Required(fieldPath.Child("jwksURI"), "jwksURI must be present when keyCache is used."))
+	}
+
 	allErrs = append(allErrs, validateSecretName(jwt.Secret, fieldPath.Child("secret"))...)
 
 	allErrs = append(allErrs, validateJWTToken(jwt.Token, fieldPath.Child("token"))...)

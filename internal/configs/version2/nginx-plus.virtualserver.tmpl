@@ -61,6 +61,10 @@ server {
     listen 80{{ if $s.ProxyProtocol }} proxy_protocol{{ end }};
     {{ if not $s.DisableIPV6 }}listen [::]:80{{ if $s.ProxyProtocol }} proxy_protocol{{ end }};{{ end }}
 
+    {{ with $s.JWTAuth }}
+    {{ if .KeyCache }} proxy_cache_path /var/cache/nginx/jwk levels=1 keys_zone=jwk:1m max_size=10m; {{ end }}
+    {{ end }}
+
     server_name {{ $s.ServerName }};
     status_zone {{ $s.StatusZone }};
     set $resource_type "virtualserver";
@@ -163,7 +167,23 @@ server {
 
     {{ with $s.JWTAuth }}
     auth_jwt "{{ .Realm }}"{{ if .Token }} token={{ .Token }}{{ end }};
-    auth_jwt_key_file {{ .Secret }};
+    {{ if .Secret}}auth_jwt_key_file {{ .Secret }};{{ end }}
+    {{ if .JwksURI }}
+    auth_jwt_type signed; ## signed is default. Others are `encrypted`, `nested`
+    {{ if .KeyCache }}auth_jwt_key_cache {{ .KeyCache }};{{ end }}
+    auth_jwt_key_request /_jwks_uri;
+
+    location = /_jwks_uri {
+        internal;
+        proxy_method GET;
+        {{ if .KeyCache }}
+        proxy_cache jwk; # Cache responses
+        proxy_cache_valid 200 {{ .KeyCache }};
+        {{ end }}
+        proxy_pass {{ .JwksURI }}; # Obtain keys from here
+    }
+
+    {{ end }}
     {{ end }}
 
     {{ with $s.BasicAuth }}
