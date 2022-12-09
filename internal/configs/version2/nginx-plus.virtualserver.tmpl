@@ -57,13 +57,13 @@ match {{ $m.Name }} {
 {{ end }}
 
 {{ $s := .Server }}
+{{ with $s.JWTAuth }}
+{{ if .KeyCache }}proxy_cache_path /var/cache/nginx/jwk levels=1 keys_zone=jwk:1m max_size=10m; {{ end }}
+{{ end }}
+
 server {
     listen 80{{ if $s.ProxyProtocol }} proxy_protocol{{ end }};
     {{ if not $s.DisableIPV6 }}listen [::]:80{{ if $s.ProxyProtocol }} proxy_protocol{{ end }};{{ end }}
-
-    {{ with $s.JWTAuth }}
-    {{ if .KeyCache }} proxy_cache_path /var/cache/nginx/jwk levels=1 keys_zone=jwk:1m max_size=10m; {{ end }}
-    {{ end }}
 
     server_name {{ $s.ServerName }};
     status_zone {{ $s.StatusZone }};

@@ -820,6 +820,7 @@ func (p *policiesCfg) addJWTAuthConfig(
 		res.addWarningf("Multiple jwt policies in the same context is not valid. JWT policy %s will be ignored", polKey)
 		return res
 	}
+	//TODO: consider removing validation as it's done in crd apply (policy.go)
 	if jwtAuth.Secret != "" && jwtAuth.JwksURI != "" {
 		res.addWarningf("Secret and JwksURI cannot be used at the same time. JWT policy %s will be ignored", polKey)
 		res.isError = true
