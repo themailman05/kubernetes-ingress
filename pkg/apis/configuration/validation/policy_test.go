@@ -399,7 +399,6 @@ func TestValidateRateLimitFails(t *testing.T) {
 	}
 }
 
-// TODO: fix and add tests
 func TestValidateJWT(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -439,7 +438,6 @@ func TestValidateJWT(t *testing.T) {
 	}
 }
 
-// TODO: fix and add tests
 func TestValidateJWTFails(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
