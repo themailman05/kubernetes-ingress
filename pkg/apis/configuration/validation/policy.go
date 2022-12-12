@@ -177,7 +177,6 @@ func validateJWT(jwt *v1.JWTAuth, fieldPath *field.Path) field.ErrorList {
 
 	allErrs = append(allErrs, validateJWTToken(jwt.Token, fieldPath.Child("token"))...)
 
-	//TODO: validate jwt.JwksURI and jwt.KeyCache
 	if jwt.JwksURI != "" {
 		allErrs = append(allErrs, validateURL(jwt.JwksURI, fieldPath.Child("jwksURI"))...)
 	}
