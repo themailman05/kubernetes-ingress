@@ -820,18 +820,7 @@ func (p *policiesCfg) addJWTAuthConfig(
 		res.addWarningf("Multiple jwt policies in the same context is not valid. JWT policy %s will be ignored", polKey)
 		return res
 	}
-	//TODO: consider removing validation as it's done in crd apply (policy.go)
-	if jwtAuth.Secret != "" && jwtAuth.JwksURI != "" {
-		res.addWarningf("Secret and JwksURI cannot be used at the same time. JWT policy %s will be ignored", polKey)
-		res.isError = true
-		return res
-	}
-	if jwtAuth.Secret != "" { // Use secret key
-		if jwtAuth.KeyCache != "" {
-			res.addWarningf("KeyCache cannot be used with Secret. JWT policy %s will be ignored", polKey)
-			res.isError = true
-			return res
-		}
+	if jwtAuth.Secret != "" {
 		jwtSecretKey := fmt.Sprintf("%v/%v", polNamespace, jwtAuth.Secret)
 		secretRef := secretRefs[jwtSecretKey]
 		var secretType api_v1.SecretType
@@ -854,7 +843,7 @@ func (p *policiesCfg) addJWTAuthConfig(
 			Token:  jwtAuth.Token,
 		}
 		return res
-	} else if jwtAuth.JwksURI != "" { // Use JWKS URI
+	} else if jwtAuth.JwksURI != "" {
 		p.JWTAuth = &version2.JWTAuth{
 			JwksURI:  jwtAuth.JwksURI,
 			Realm:    jwtAuth.Realm,
@@ -862,12 +851,8 @@ func (p *policiesCfg) addJWTAuthConfig(
 			KeyCache: jwtAuth.KeyCache,
 		}
 		return res
-	} else {
-		res.addWarningf("Either Secret or JwksURI must be present. JWT policy %s will be ignored", polKey)
-		res.isError = true
-		return res
 	}
-
+	return res
 }
 
 func (p *policiesCfg) addIngressMTLSConfig(

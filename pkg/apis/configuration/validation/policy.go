@@ -13,6 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
+var timeSuffix = []string{"ms", "s", "m", "h", "d", "w", "M", "y"}
+
 // ValidatePolicy validates a Policy.
 func ValidatePolicy(policy *v1.Policy, isPlus, enableOIDC, enableAppProtect bool) error {
 	allErrs := validatePolicySpec(&policy.Spec, field.NewPath("spec"), isPlus, enableOIDC, enableAppProtect)
@@ -176,7 +178,30 @@ func validateJWT(jwt *v1.JWTAuth, fieldPath *field.Path) field.ErrorList {
 	allErrs = append(allErrs, validateJWTToken(jwt.Token, fieldPath.Child("token"))...)
 
 	//TODO: validate jwt.JwksURI and jwt.KeyCache
+	if jwt.JwksURI != "" {
+		allErrs = append(allErrs, validateURL(jwt.JwksURI, fieldPath.Child("jwksURI"))...)
+	}
 
+	if jwt.KeyCache != "" {
+		allErrs = append(allErrs, validateKeyCache(jwt.KeyCache, fieldPath.Child("keyCache"))...)
+	}
+
+	return allErrs
+}
+
+func validateKeyCache(name string, fieldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	for _, suffix := range timeSuffix {
+		if strings.HasSuffix(name, suffix) {
+			timeStr := strings.TrimSuffix(name, suffix)
+			_, err := strconv.Atoi(timeStr)
+			if err != nil {
+				allErrs = append(allErrs, field.Invalid(fieldPath, name, "unable to parse KeyCache field. Prefix is not an integer."))
+			}
+			return allErrs
+		}
+	}
+	allErrs = append(allErrs, field.Invalid(fieldPath, name, "unable to parse KeyCache field. Invalid or missing suffix."))
 	return allErrs
 }
 
