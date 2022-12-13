@@ -7,9 +7,9 @@ from suite.utils.resources_utils import (
     create_secret_from_yaml,
     delete_secret,
     ensure_response_from_backend,
+    get_ts_nginx_template_conf,
     patch_deployment_from_yaml,
     wait_before_test,
-    get_ts_nginx_template_conf
 )
 from suite.utils.yaml_utils import get_name_from_yaml
 
@@ -37,7 +37,13 @@ from suite.utils.yaml_utils import get_name_from_yaml
 )
 class TestHealthCheckTransportServer:
     def test_responses_svc_insight_http(
-        self, request, kube_apis, crd_ingress_controller, transport_server_setup, ingress_controller_prerequisites, ingress_controller_endpoint
+        self,
+        request,
+        kube_apis,
+        crd_ingress_controller,
+        transport_server_setup,
+        ingress_controller_prerequisites,
+        ingress_controller_endpoint,
     ):
         """Test responses from service insight enpoint with http"""
         retry = 0
