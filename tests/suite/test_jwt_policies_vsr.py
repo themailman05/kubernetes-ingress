@@ -212,7 +212,9 @@ class TestJWTPoliciesVsr:
             pytest.fail(f"Not a valid case or parameter")
 
     @pytest.mark.smoke
-    @pytest.mark.parametrize("policy", [jwt_pol_valid_src, jwt_pol_invalid_src, jwt_pol_jwksuri_valid_src, jwt_pol_jwksuri_invalid_src])
+    @pytest.mark.parametrize(
+        "policy", [jwt_pol_valid_src, jwt_pol_invalid_src, jwt_pol_jwksuri_valid_src, jwt_pol_jwksuri_invalid_src]
+    )
     def test_jwt_policy(
         self,
         kube_apis,
