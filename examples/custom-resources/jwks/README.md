@@ -1,0 +1,142 @@
+# JWSK
+
+In this example we deploy a web application, configure load balancing for it via a VirtualServer, and apply a JWT policy.
+Instead of using a local secret to verify the client request like we do in our [jwt](https://github.com/nginxinc/kubernetes-ingress/tree/main/examples/custom-resources/jwt) example, we will define an external Identity Provider (IdP) using the `JwksURI` field.
+
+We will be using a deployment of [KeyCloak](https://www.keycloak.org/) to work as our IdP in this example.
+
+## Prerequisites
+
+1. Follow the [installation](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/) instructions to deploy the Ingress Controller.
+
+2. Save the public IP address of the Ingress Controller into `/etc/hosts` of your machine:
+    ```
+    ...
+
+    XXX.YYY.ZZZ.III webapp.example.com
+    XXX.YYY.ZZZ.III keycloak.example.com
+    ```
+   Here `webapp.example.com` is the domain for the web application and `keycloak.example.com` is the domain for Keycloak.
+
+## Step 1 - Deploy a TLS Secret
+
+Create a secret with the TLS certificate and key that will be used for TLS termination of the web application and Keycloak:
+```
+$ kubectl apply -f tls-secret.yaml
+```
+
+## Step 2 - Deploy a Web Application
+
+Create the application deployment and service:
+```
+$ kubectl apply -f webapp.yaml
+```
+
+## Step 3 - Deploy Keycloak
+
+1. Create the Keycloak deployment and service:
+    ```
+    $ kubectl apply -f keycloak.yaml
+    ```
+1. Create a VirtualServer resource for Keycloak:
+    ```
+    $ kubectl apply -f virtual-server-idp.yaml
+    ```
+
+## Step 4 - Configure Keycloak
+
+To set up Keycloak:
+1. To connect to Keycloak, use `https://keycloak.example.com`.
+
+2. Create a new Realm. We will use `jwks-example` for this example. This can be done by selecting the dropdown menu on the left and selecting Create Realm
+
+3. Create a new Client called `jwks-client`. This can be done by selecting the Clients tab on the left and then selecting Create client.
+   - When creating the Client, ensure both Client authentication and Authorization are enabled.
+
+4. Once the client is created, navigate to the Credentials tab for that client and copy the Client secret.
+   - This can be saved in the `SECRET` shell variable for later:
+      ```
+      export SECRET=<client secret>
+      ```
+
+5. Create a new User called `jwks-user`. This can be done by selecting the Users tab on the left and then selecting Create client.
+
+6. Once the user is created, navigate to the Credentials tab for that user and select Set password. For this example the password can be whatever you want.
+   - This can be saved in the `CREDENTIAL` shell variablefor later:
+     ```
+     export CREDENTIAL=<user credentials>
+     ```
+
+## Step 5 - Deploy the JWT Policy
+
+1. Create a policy with the name `jwt-policy` and configure the `JwksURI` field to that only permits requests to our web application that contain a valid JWT.
+In the example policy below, replace `<your_realm>` with the realm created in Step 4. In this case we used `jwks-example` as our realm name:
+
+```
+apiVersion: k8s.nginx.org/v1
+kind: Policy
+metadata:
+  name: jwt-policy
+spec:
+  jwt:
+    realm: MyProductAPI
+    token: $http_token
+    jwksURI: https://keycloak.example.com/realms/<your_realm>/protocol/openid-connect/certs
+    keyCache: 1h
+```
+
+2. Deploy the policy:
+```
+$ kubectl apply -f jwks.yaml
+```
+
+## Step 6 - Configure Load Balancing
+
+Create a VirtualServer resource for the web application:
+```
+$ kubectl apply -f virtual-server.yaml
+```
+
+Note that the VirtualServer references the policy `jwt-policy` created in Step 5.
+
+## Step 7 - Get the client token
+
+In order for the client to have permission to send requests to the web application they must send a Bearer token to the application.
+To get this token, run the following `curl` command:
+```
+export TOKEN=$(curl -k -L -X POST 'https://keycloak.example.com/realms/jwks-test/protocol/openid-connect/token' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'scope=openid' \
+--data-urlencode 'client_id=jwks-client' \
+--data-urlencode 'client_secret=$SECRET' \
+--data-urlencode 'username=jwks-user' \
+--data-urlencode 'password=$CREDENTIAL' \
+| jq -r .access_token)
+```
+
+This command will save the token in the `TOKEN` shell variable.
+
+## Step 8 - Test the Configuration
+
+If you attempt to access the application without providing the bearer token, NGINX will reject your requests for that VirtualServer:
+```
+$ curl -H 'Accept: application/json' webapp.example.com
+<html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>nginx/1.23.2</center>
+</body>
+</html>
+```
+
+If a valid bearer token is provided, request will succeed:
+```
+$ curl -H 'Accept: application/json' -H "token: ${TOKEN}" webapp.example.com
+Server address: 10.42.0.7:8080
+Server name: webapp-5c6fdbcbf9-pt9tp
+Date: 13/Dec/2022:14:50:33 +0000
+URI: /
+Request ID: f1241390ac51318afa4fcc39d2341359
+```
