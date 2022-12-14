@@ -104,7 +104,7 @@ Note that the VirtualServer references the policy `jwt-policy` created in Step 5
 In order for the client to have permission to send requests to the web application they must send a Bearer token to the application.
 To get this token, run the following `curl` command:
 ```
-export TOKEN=$(curl -k -L -X POST 'https://keycloak.example.com/realms/jwks-test/protocol/openid-connect/token' \
+export TOKEN=$(curl -k -L -X POST 'https://keycloak.example.com/realms/jwks-example/protocol/openid-connect/token' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'grant_type=password' \
 --data-urlencode 'scope=openid' \

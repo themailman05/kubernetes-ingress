@@ -100,15 +100,15 @@ spec:
                   description: JWTAuth holds JWT authentication configuration.
                   type: object
                   properties:
+                    jwksURI:
+                      type: string
+                    keyCache:
+                      type: string
                     realm:
                       type: string
                     secret:
                       type: string
                     token:
-                      type: string
-                    jwksURI:
-                      type: string
-                    keyCache:
                       type: string
                 oidc:
                   description: OIDC defines an Open ID Connect policy.
@@ -267,10 +267,6 @@ spec:
                     secret:
                       type: string
                     token:
-                      type: string
-                    jwksURI:
-                      type: string
-                    keyCache:
                       type: string
                 rateLimit:
                   description: RateLimit defines a rate limit policy.
