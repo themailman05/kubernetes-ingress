@@ -12,5 +12,7 @@ spec:
     port: 80
   routes:
   - path: /
+#    policies:
+#      - name: jwt-policy
     action:
       pass: webapp
