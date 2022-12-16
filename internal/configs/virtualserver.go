@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -844,8 +845,16 @@ func (p *policiesCfg) addJWTAuthConfig(
 		}
 		return res
 	} else if jwtAuth.JwksURI != "" {
+		uri, _ := url.Parse(jwtAuth.JwksURI)
+
+		JwksURI := &version2.JwksURI{
+			JwksHost: uri.Hostname(),
+			JwksPort: uri.Port(),
+			JwksPath: uri.Path,
+		}
+
 		p.JWTAuth = &version2.JWTAuth{
-			JwksURI:  jwtAuth.JwksURI,
+			JwksURI:  *JwksURI,
 			Realm:    jwtAuth.Realm,
 			Token:    jwtAuth.Token,
 			KeyCache: jwtAuth.KeyCache,

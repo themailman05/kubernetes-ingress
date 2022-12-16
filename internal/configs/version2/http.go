@@ -354,7 +354,14 @@ type JWTAuth struct {
 	Realm    string
 	Token    string
 	KeyCache string
-	JwksURI  string
+	JwksURI  JwksURI
+}
+
+// JwksURI defines the components of a JwksURI
+type JwksURI struct {
+	JwksHost string
+	JwksPort string
+	JwksPath string
 }
 
 // BasicAuth refers to basic HTTP authentication mechanism options

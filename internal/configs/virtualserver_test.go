@@ -2969,6 +2969,41 @@ func TestGeneratePolicies(t *testing.T) {
 					Spec: conf_v1.PolicySpec{
 						JWTAuth: &conf_v1.JWTAuth{
 							Realm:    "My Test API",
+							JwksURI:  "http://idp.example.com:8080/keys",
+							KeyCache: "1h",
+						},
+					},
+				},
+			},
+			expected: policiesCfg{
+				JWTAuth: &version2.JWTAuth{
+					Realm: "My Test API",
+					JwksURI: version2.JwksURI{
+						JwksHost: "idp.example.com",
+						JwksPort: "8080",
+						JwksPath: "/keys",
+					},
+					KeyCache: "1h",
+				},
+			},
+			msg: "Basic jwks example",
+		},
+		{
+			policyRefs: []conf_v1.PolicyReference{
+				{
+					Name:      "jwt-policy-2",
+					Namespace: "default",
+				},
+			},
+			policies: map[string]*conf_v1.Policy{
+				"default/jwt-policy-2": {
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "jwt-policy",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						JWTAuth: &conf_v1.JWTAuth{
+							Realm:    "My Test API",
 							JwksURI:  "http://idp.example.com/keys",
 							KeyCache: "1h",
 						},
@@ -2977,12 +3012,16 @@ func TestGeneratePolicies(t *testing.T) {
 			},
 			expected: policiesCfg{
 				JWTAuth: &version2.JWTAuth{
-					Realm:    "My Test API",
-					JwksURI:  "http://idp.example.com/keys",
+					Realm: "My Test API",
+					JwksURI: version2.JwksURI{
+						JwksHost: "idp.example.com",
+						JwksPort: "",
+						JwksPath: "/keys",
+					},
 					KeyCache: "1h",
 				},
 			},
-			msg: "jwks reference",
+			msg: "Basic jwks example, no port in JwksURI",
 		},
 		{
 			policyRefs: []conf_v1.PolicyReference{
