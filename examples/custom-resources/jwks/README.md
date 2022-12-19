@@ -1,4 +1,4 @@
-# JWSK
+# JWKS
 
 In this example we deploy a web application, configure load balancing for it via a VirtualServer, and apply a JWT policy.
 Instead of using a local secret to verify the client request like we do in our [jwt](https://github.com/nginxinc/kubernetes-ingress/tree/main/examples/custom-resources/jwt) example, we will define an external Identity Provider (IdP) using the `JwksURI` field.
@@ -62,7 +62,7 @@ To set up Keycloak:
 5. Create a new User called `jwks-user`. This can be done by selecting the Users tab on the left and then selecting Create client.
 
 6. Once the user is created, navigate to the Credentials tab for that user and select Set password. For this example the password can be whatever you want.
-   - This can be saved in the `CREDENTIAL` shell variablefor later:
+   - This can be saved in the `CREDENTIAL` shell variable for later:
      ```
      export CREDENTIAL=<user credentials>
      ```
@@ -70,8 +70,8 @@ To set up Keycloak:
 ## Step 5 - Deploy the JWT Policy
 
 1. Create a policy with the name `jwt-policy` and configure the `JwksURI` field to that only permits requests to our web application that contain a valid JWT.
-In the example policy below, replace `<your_realm>` with the realm created in Step 4. In this case we used `jwks-example` as our realm name:
-
+In the example policy below, replace `<your_realm>` with the realm created in Step 4. In this case we used `jwks-example` as our realm name.
+NOTE: the value of `spec.jwt.token` is set to `$http_token` in this example as we are sending the client token in an HTTP header.
 ```
 apiVersion: k8s.nginx.org/v1
 kind: Policy
@@ -104,14 +104,14 @@ Note that the VirtualServer references the policy `jwt-policy` created in Step 5
 In order for the client to have permission to send requests to the web application they must send a Bearer token to the application.
 To get this token, run the following `curl` command:
 ```
-export TOKEN=$(curl -k -L -X POST 'https://keycloak.example.com/realms/jwks-example/protocol/openid-connect/token' \
+$ export TOKEN=$(curl -k -L -X POST 'https://keycloak.example.com/realms/jwks-example/protocol/openid-connect/token' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'grant_type=password' \
---data-urlencode 'scope=openid' \
---data-urlencode 'client_id=jwks-client' \
---data-urlencode 'client_secret=$SECRET' \
---data-urlencode 'username=jwks-user' \
---data-urlencode 'password=$CREDENTIAL' \
+--data-urlencode grant_type=password \
+--data-urlencode scope=openid \
+--data-urlencode client_id=jwks-client \
+--data-urlencode client_secret=$SECRET \
+--data-urlencode username=jwks-user \
+--data-urlencode password=$CREDENTIAL \
 | jq -r .access_token)
 ```
 
