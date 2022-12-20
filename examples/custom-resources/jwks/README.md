@@ -90,7 +90,22 @@ spec:
 $ kubectl apply -f jwks.yaml
 ```
 
-## Step 6 - Configure Load Balancing
+## Step 6 - Deploy a config map with a resolver
+
+If the value of `jwksURI` uses a hostname, the Ingress Controller will need a reference a resolver.
+This can be done by deploying a ConfigMap with the `resolver-addresses` data field
+```
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-config
+  namespace: nginx-ingress
+data:
+  resolver-addresses: <resolver-ip>
+```
+
+
+## Step 7 - Configure Load Balancing
 
 Create a VirtualServer resource for the web application:
 ```
@@ -99,7 +114,7 @@ $ kubectl apply -f virtual-server.yaml
 
 Note that the VirtualServer references the policy `jwt-policy` created in Step 5.
 
-## Step 7 - Get the client token
+## Step 8 - Get the client token
 
 In order for the client to have permission to send requests to the web application they must send a Bearer token to the application.
 To get this token, run the following `curl` command:
@@ -117,7 +132,7 @@ $ export TOKEN=$(curl -k -L -X POST 'https://keycloak.example.com/realms/jwks-ex
 
 This command will save the token in the `TOKEN` shell variable.
 
-## Step 8 - Test the Configuration
+## Step 9 - Test the Configuration
 
 If you attempt to access the application without providing the bearer token, NGINX will reject your requests for that VirtualServer:
 ```
