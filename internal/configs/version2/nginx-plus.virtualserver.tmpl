@@ -63,9 +63,7 @@ match {{ $m.Name }} {
 
 {{ range $l := $s.Locations }}
 {{ with $l.JWTAuth }}
-
 {{ if .KeyCache }}proxy_cache_path /var/cache/nginx{{ $l.Path }}_jwks_uri levels=1 keys_zone={{ $l.Path }}_jwks_uri:1m max_size=10m; {{ end }}
-
 {{ end }}
 {{ end }}
 
@@ -186,13 +184,11 @@ server {
         internal;
         proxy_method GET;
         {{ if .KeyCache }}
-        proxy_cache jwk; # Cache responses
+        proxy_cache jwk;
         proxy_cache_valid 200 {{ .KeyCache }};
         {{ end }}
         {{ with $s.JWTAuth.JwksURI }}
         proxy_set_header Host {{ .JwksHost }};
-        # proxy_ssl_name {{ .JwksHost }};
-        # proxy_ssl_server_name on;
         set $idp_backend {{ .JwksHost }};
         proxy_pass http://$idp_backend{{ if .JwksPort }}:{{ .JwksPort }}{{ end }}{{ .JwksPath }};
         {{ end }}
@@ -385,13 +381,11 @@ server {
             internal;
             proxy_method GET;
             {{ if .KeyCache }}
-            proxy_cache {{ $l.Path }}_jwks_uri; # Cache responses
+            proxy_cache {{ $l.Path }}_jwks_uri;
             proxy_cache_valid 200 {{ .KeyCache }};
             {{ end }}
             {{ with $l.JWTAuth.JwksURI }}
             proxy_set_header Host {{ .JwksHost }};
-            # proxy_ssl_name {{ .JwksHost }};
-            # proxy_ssl_server_name on;
             set $idp_backend {{ .JwksHost }};
             proxy_pass http://$idp_backend{{ if .JwksPort }}:{{ .JwksPort }}{{ end }}{{ .JwksPath }};
             {{ end }}
