@@ -43,7 +43,7 @@ To access the dashboard:
     $ kubectl port-forward <nginx-plus-ingress-pod> 8080:8080 --namespace=nginx-ingress
     ```
 1. Open your browser at http://127.0.0.1:8080/dashboard.html to access the dashboard.
-1. App Protect Dos: Open your browser at http://127.0.0.1:8080/dashboard-dos.html to access the dashboard.
+1. App Protect DoS: Open your browser at http://127.0.0.1:8080/dashboard-dos.html to access the dashboard.
 
 If you want to access the dashboard externally (without `kubectl port-forward`):
 1. Configure `-nginx-status-allow-cidrs` command-line argument with IP/CIDR blocks for which you want to allow access to the dashboard. By default, the access is allowed for `127.0.0.1,::1`.
