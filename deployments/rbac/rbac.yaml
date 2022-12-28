@@ -4,6 +4,14 @@ metadata:
   name: nginx-ingress
 rules:
 - apiGroups:
+  - ""
+  resources:
+    - endpoints
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
   - discovery.k8s.io
   resources:
   - endpointslices
